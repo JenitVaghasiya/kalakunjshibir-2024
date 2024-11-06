@@ -1,0 +1,245 @@
+﻿@model KalakunjShibir.Models.ViewModels.BuildingOccupancyDetailsViewModel
+
+@{
+    ViewData["Title"] = $"{Model.BuildingName} - Occupancy Details";
+}
+
+<div class="container-fluid p-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-building"></i> @Model.BuildingName - Occupancy Details
+            </h5>
+            <div>
+                <a asp-action="Index" class="btn btn-light btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Date Selection and Summary -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <form method="get" class="d-flex gap-2 align-items-end">
+                        <input type="hidden" name="buildingId" value="@Model.BuildingId" />
+                        <div class="flex-grow-1">
+                            <label class="form-label">Select Date</label>
+                            <input type="date" name="date" class="form-control"
+                                   value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Check
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-info mb-0">
+                        <h6 class="alert-heading">Quick Summary</h6>
+                        <div class="row">
+                            <div class="col-sm-6">Total Rooms: @Model.TotalRooms</div>
+                            <div class="col-sm-6">Occupied: @Model.OccupiedRooms</div>
+                            <div class="col-sm-6">Available: @Model.AvailableRooms</div>
+                            <div class="col-sm-6">NRI Bookings: @Model.NRIBookings</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Occupancy Progress -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">Occupancy Rate</h6>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-@Model.StatusColor"
+                             role="progressbar"
+                             style="width: @Model.OccupancyRate%">
+                            @Model.OccupancyRate.ToString("F1")%
+                        </div>
+                    </div>
+                    <small class="text-muted">Status: @Model.Status</small>
+                </div>
+            </div>
+
+            <!-- Room Grid -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">Room Status Grid</h6>
+                    <div class="row g-3 room-grid">
+                        @for (int room = 1; room <= Model.TotalRooms; room++)
+                        {
+                            var isOccupied = Model.IsRoomOccupied(room);
+                            var roomDetails = Model.GetRoomDetails(room);
+
+                            <div class="col-md-3 col-sm-4 col-6">
+                                <div class="card @(isOccupied ? "border-danger" : "border-success")">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title mb-1">Room @room</h6>
+                                        @if (isOccupied && roomDetails != null)
+                                        {
+                                            <small class="d-block">Guest: @roomDetails.Name</small>
+                                            <small class="d-block">From: @roomDetails.Village</small>
+                                            @if (roomDetails.IsNRI)
+                                            {
+                                                <span class="badge bg-info">NRI</span>
+                                            }
+                                            <div class="mt-1">
+                                                <small class="text-muted">
+                                                    @roomDetails.RoomBookings.First().StartDate.ToString("MMM dd") -
+                                                    @roomDetails.RoomBookings.First().EndDate.ToString("MMM dd")
+                                                </small>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Available</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Bookings -->
+            @if (Model.OccupiedRoomDetails.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6 class="card-title">Current Bookings</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="bookingsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Room</th>
+                                        <th>Guest Name</th>
+                                        <th>Village</th>
+                                        <th>NRI</th>
+                                        <th>Check-in</th>
+                                        <th>Check-out</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var booking in Model.OccupiedRoomDetails.OrderBy(x => x.RoomBookings.First().RoomNumber))
+                                    {
+                                        <tr>
+                                            <td>@booking.RoomBookings.First().RoomNumber</td>
+                                            <td>@booking.Name</td>
+                                            <td>@booking.Village</td>
+                                            <td>
+                                                @if (booking.IsNRI)
+                                                {
+                                                    <span class="badge bg-info">Yes</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>-</span>
+                                                }
+                                            </td>
+                                            <td>@booking.RoomBookings.First().StartDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@booking.RoomBookings.First().EndDate.ToString("MMM dd, yyyy")</td>
+                                            <td>
+                                                <a asp-controller="Data"
+                                                   asp-action="Edit"
+                                                   asp-route-id="@booking.Id"
+                                                   class="btn btn-warning btn-sm">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Statistics -->
+            <div class="row">
+                <!-- Village-wise Distribution -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">Village-wise Distribution</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Village</th>
+                                            <th>Bookings</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var village in Model.BookingsByVillage)
+                                        {
+                                            <tr>
+                                                <td>@village.Key</td>
+                                                <td>@village.Value</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Floor-wise Occupancy -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">Floor-wise Occupancy</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Floor</th>
+                                            <th>Occupied Rooms</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var floor in Model.FloorwiseOccupancy.OrderBy(x => x.Key))
+                                        {
+                                            <tr>
+                                                <td>Floor @floor.Key</td>
+                                                <td>@floor.Value</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable for bookings
+            $('#bookingsTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                responsive: true,
+                dom: 'frtip'
+            });
+        });
+    </script>
+
+    <style>
+        .room-grid .card {
+            transition: all 0.3s ease;
+        }
+
+            .room-grid .card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+    </style>
+}
