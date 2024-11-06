@@ -1,0 +1,61 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="container mt-4">
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-check display-4 text-primary mb-3"></i>
+                        <h5 class="card-title">Room Bookings</h5>
+                        <p class="card-text">Manage room bookings and check guest details</p>
+                        <a asp-controller="Data" asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-list-ul"></i> View Bookings
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-building display-4 text-success mb-3"></i>
+                        <h5 class="card-title">Occupancy Status</h5>
+                        <p class="card-text">Check room availability and occupancy details</p>
+                        <a asp-controller="Occupancy" asp-action="Index" class="btn btn-success">
+                            <i class="bi bi-graph-up"></i> View Status
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-plus-circle display-4 text-info mb-3"></i>
+                        <h5 class="card-title">New Booking</h5>
+                        <p class="card-text">Create a new room booking for guests</p>
+                        <a asp-controller="Data" asp-action="Create" class="btn btn-info">
+                            <i class="bi bi-plus"></i> Create Booking
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <h1 class="display-4 mb-4">Welcome to Kalakunj Shibir</h1>
+            <p class="lead mb-4">Room management and booking system</p>
+            <div class="mt-4">
+                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg">
+                    <i class="bi bi-box-arrow-in-right"></i> Login to Continue
+                </a>
+            </div>
+        </div>
+    }
+</div>
